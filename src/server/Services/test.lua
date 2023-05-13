@@ -1,9 +1,10 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Knit = require(ReplicatedStorage.Packages.Knit)
+local car = {}
+car.__index = car
 
-local test = Knit.CreateService({
-    Name = "test",
-    Client = {}
-})
+function car.new()
+    local self = setmetatable({}, car)
 
-return test
+    return self
+end
+
+return car
