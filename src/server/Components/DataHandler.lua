@@ -1,12 +1,33 @@
 local DataHandler = {}
-DataHandler.Profiles = {}
-DataHandler.DataTempo = {}
+local DataStoreService = game:GetService("DataStoreService")
+local PlayerDataStore = DataStoreService:GetDataStore("PlayerData")
 
-local ProfileService = require(game.ReplicatedStorage.Packages.ProfileService)
-local ProfileStore
-ProfileStore = ProfileService.GetProfileStore("PlayerDataStore")
+DataHandler.SaveData = function(Player,Data)
+    local PlayerData = Data
+    local success, error = pcall(function()
+        PlayerDataStore:SetAsync(Player.UserId,PlayerData)
+    end)
 
-DataHandler.SetDataTempo = function(Data)
+    if success then
+    else
+        warn("Data failed to save.")
+        print(error)
+    end
+end
+
+DataHandler.LoadData = function(Player,StatsTable)
+    local DataFinal = nil
+    local success, error = pcall(function()
+        DataFinal = PlayerDataStore:GetAsync(Player.UserId)
+    end)
+
+    if success and DataFinal ~= nil then
+        for Index, Stats in pairs(StatsTable) do
+            Stats.Value = DataFinal[Stats.Name]
+        end
+    else
+        warn("Data failed to load")
+    end
 end
 
 return DataHandler
