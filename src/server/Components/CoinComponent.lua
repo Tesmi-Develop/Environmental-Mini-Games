@@ -28,6 +28,8 @@ end
 function CoinComponent:Start()
     local instance = self.Instance :: BasePart
 
+    instance.CanCollide = false
+
     instance.Touched:Connect(function(otherPart)
         local player = Players:GetPlayerFromCharacter(otherPart.Parent)
 
