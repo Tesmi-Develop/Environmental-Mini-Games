@@ -4,13 +4,17 @@ local Signal = require(ReplicatedStorage.Packages.Signal)
 local StatsValue = {}
 StatsValue.__index = StatsValue
 
-function StatsValue.new(name: string, displayName: string, profileData: table)
+function StatsValue.new(name: string, displayName: string, profileData: table, defaultValue: number)
     local self = setmetatable({}, StatsValue)
     self.Name = name
     self.DisplayName = displayName
     self.ProfileData = profileData
     self.OnChangeValue = Signal.new();
     
+    if self:GetValue() == nil then
+        self:SetValue(defaultValue)
+    end
+
     return self
 end
 

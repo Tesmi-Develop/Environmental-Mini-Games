@@ -14,8 +14,8 @@ function Stats.new(player)
     return self
 end
 
-function Stats:Create(name: string, displayName: string,  value: number)
-    local instance = StatsValue.new(name, displayName, value)
+function Stats:Create(name: string, displayName: string,  data: table, defaultValue: number)
+    local instance = StatsValue.new(name, displayName, data, defaultValue)
     self.Stats[name] = instance
 
     return StatsValue;
@@ -29,7 +29,7 @@ function Stats:Init()
     local Data = self.Player:GetData(Stats.DataName, {})
     
     for _, value in StatsTemplate do
-        self:Create(value.Name, value.DisplayName, Data)
+        self:Create(value.Name, value.DisplayName, Data, value.DefaultValue)
     end
 end
 

@@ -1,52 +1,95 @@
 local DataStore = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
-local PlayerData = DataStore:GetOrderedDataStore("PlayerDataStore")
-local Leaderboard = game.Workspace:WaitForChild("Leaderboards")
+local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
-local ReplicatedStorage = game.ReplicatedStorage
+local GamePlayer = require(ServerScriptService.Core.ComponentsHandler)['GamePlayer'];
 local Components = require(ReplicatedStorage.Packages.Components)
-local Signal = require(ReplicatedStorage.Packages.Signal)
-
-local LeaderboardItems = game.ServerStorage.LeaderboardItems
+local Template = game.ServerStorage.LeaderboardItems.Template
 
 local LeaderboardComponent = Components.new({
     Tag = "Leaderboard"
 })
 
 function LeaderboardComponent:Construct()
-    self.LoadTime = 120;
-    self.LoadStats = {"Money","MatchesWon","HoursPlayed"}
+    self.LoadTime = 3;
+    self.IsStop = false;
+    self.CountRanks = self.Instance:GetAttribute('CountRanks');
+    self.StatsName = self.Instance:GetAttribute('Type');
+    self.DataStore = DataStore:GetOrderedDataStore('Leaderboard'..self.StatsName);
+    self.List = self.Instance:FindFirstChildOfClass("SurfaceGui").List;
+
+    if self.CountRanks == nil then
+        error('LeaderBoard '..self.Instance.Name..' not have attribute CountRanks')
+    end
 end
 
-function LeaderboardComponent:CreateTemplate(Index,PlayerName, Value)
+function LeaderboardComponent:CreateTemplate(index, playerName, value)
 
-    local Clone = LeaderboardItems.Template:Clone()
-    Clone.Parent = self.Instance:FindFirstChildOfClass("SurfaceGui").List
+    local Clone = Template:Clone()
+    Clone.Parent = self.List
+    Clone.Visible = false;
     
-    Clone.Rank.Text = tostring(Index)
-    Clone.StatName.Text = tostring(Value)
-    Clone.User.Text = PlayerName
-end
+    Clone.Rank.Text = '#'..tostring(index)
+    Clone.StatName.Text = tostring(value)
+    Clone.User.Text = playerName
 
-function LeaderboardComponent:Start()
-    local instance = self.Instance
-    local success, ErrorMsg = pcall(function()
-        local data = PlayerData:GetSortedAsync(false, 100)
-        local Page = data:GetCurrentPage()
-        for Index, dataStored in pairs(Page) do
-            if dataStored.Name == instance.Name then
-                local PlayerName = Players:GetNameFromUserIdAsync(tonumber(dataStored.key))
-                local Stats = dataStored.Value
-                LeaderboardComponent:CreateTemplate(Index,PlayerName,Stats)
-            end
-        end
+    task.spawn(function()
+        task.wait()
+        Clone.Visible = true;
     end)
 end
 
-function LeaderboardComponent:Stop()
-    if self.Connection then
-        self.Connection:Disconnect()
+function LeaderboardComponent:Update()
+    -- Write values in DataStore
+    for i, player in GamePlayer.list do
+        local playerId = player.Instance.UserId
+
+        if playerId > 0 then
+            local StatsValue = player.Stats:Find(self.StatsName);
+
+            if StatsValue == nil then
+                error('Not found stats by name '..self.StatsName)
+            end
+
+            self.DataStore:SetAsync(playerId, StatsValue:GetValue());
+        end
     end
+
+    local Frames = self.List:GetChildren()
+
+    local success, ErrorMsg = pcall(function()
+        local data = self.DataStore:GetSortedAsync(false, self.CountRanks)
+        local Page = data:GetCurrentPage()
+
+        for index, dataStored in ipairs(Page) do
+            local userName = Players:GetNameFromUserIdAsync(dataStored.key);
+            local Value = dataStored.value
+
+            if Value then
+                self:CreateTemplate(index, userName, Value)
+            end
+        end
+    end);
+
+    for index, value in Frames do
+        if value:IsA(Template.ClassName) then
+            value:Destroy()
+        end
+    end
+end
+
+function LeaderboardComponent:Start()
+    self:Update();
+    
+    while not self.IsStop do
+        task.wait(self.LoadTime)
+        self:Update();
+    end
+end
+
+function LeaderboardComponent:Stop()
+    self.IsStop = true
 end
 
 return LeaderboardComponent
