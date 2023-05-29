@@ -12,7 +12,7 @@
         "$path": "Packages"
       },
       "Libraries": {
-        "$path": "Libraries"
+        "$path": "src/server/Libraries"
       }
     },
 
