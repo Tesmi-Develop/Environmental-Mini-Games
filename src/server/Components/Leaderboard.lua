@@ -12,7 +12,7 @@ local LeaderboardComponent = Components.new({
 })
 
 function LeaderboardComponent:Construct()
-    self.LoadTime = 3;
+    self.LoadTime = 60;
     self.IsStop = false;
     self.CountRanks = self.Instance:GetAttribute('CountRanks');
     self.StatsName = self.Instance:GetAttribute('Type');
