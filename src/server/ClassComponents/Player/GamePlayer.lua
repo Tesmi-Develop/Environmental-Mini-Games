@@ -16,7 +16,6 @@ function GamePlayer.StaticInit()
     end)
 
     Players.PlayerRemoving:Connect(function(player)
-        GamePlayer.FindPlayer(player)
         GamePlayer.RemovePlayer(player)
     end)
 end
